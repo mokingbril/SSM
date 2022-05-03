@@ -1,0 +1,209 @@
+﻿@using SSM.Models;
+@{
+    Layout = null;
+    var AllSubs = ViewBag.Subs as List<Subject>;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>成绩管理</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+</head>
+<body>
+    <table class="easyui-datagrid" id="datagridr" fit="true"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Record/GetAll',method:'get',toolbar:toolbar">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'Id',width:100,align:'center'">编号</th>
+                <th data-options="field:'StuNo',width:100">学号</th>
+                <th data-options="field:'SubName',width:200">课程</th>
+                <th data-options="field:'Score',width:100,">分数</th>
+                <th data-options="field:'ExamTime',width:200,">考试时间</th>
+                <th data-options="field:'Tip',width:200,">错误申请说明</th>
+                <th data-options="field:'TrueScore',width:100,">修正分数</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="Mwin" class="easyui-window" title="新增" data-options="iconCls:'icon-save',closed:'true'" style="width: 423px;height: 268px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_d.jpg);">
+                <input type="hidden" id="rId" name="Id"  value=""/>
+                <table style="margin:0px auto;height:100%">
+                    <tr><td>课程：</td><td><select id="rSubId" name="SubId">
+                        @foreach (var sb in AllSubs){<option value="@sb.SubId">@sb.Name</option>}</select></td></tr>
+                    <tr><td>学号：</td><td><input id="rStuNo" name="StuNo" type="text" required value="" /></td></tr>
+                    <tr><td>分数：</td><td><input type="text" id="rScore" name="Score" value=""/></td></tr>
+                    <tr><td>考试时间：</td><td><input type="datetime" id="rExamTime" required name="ExamTime" value="" 
+                               editable="false"  class="easyui-datetimebox" data-options="formatter:myformatter,parser:myparser"/></td></tr>
+                    <tr><td>申请说明：</td><td><textarea id="rTip" name="Tip" cols="25" rows="3"></textarea></td></tr>
+                    <tr><td>修正分数：</td><td><input type="text" id="rTrueScore" name="TrueScore" value=""/></td></tr>
+                </table>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="rbtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#Mwin').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        var toolbar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function () {
+                $("#Mwin").window("open");
+                $("#Mwin").window("setTitle", "新增");
+                $("#rId").val("0");
+                $("#rStuNo").val("");
+                $("#rScore").val("");
+                $("#rTip").val("").attr("disabled", "");
+                $("#rTrueScore").val("").attr("disabled", "");
+            }
+        }, {
+            text: '修改',
+            iconCls: 'icon-edit',
+            handler: function () {
+                var row = $('#datagridr').datagrid('getSelected');
+                if (row) {
+                    $("#Mwin").window("open");
+                    $("#Mwin").window("setTitle", "修改[编号：" + row.Id + "]");
+                    $("#rId").val(row.Id);
+                    $("#rStuNo").val(row.StuNo);
+                    $("#rScore").val(row.Score);
+                    $("#rExamTime").val(row.ExamTime);
+                    $("#rTip").removeProp("disabled").val(row.Tip);
+                    $("#rTrueScore").removeProp("disabled").val(row.TrueScore);
+                    for (var i = 0; i < $("#rSubId option").length; i++) {
+                        if (row.SubName == $("#rSubId option:eq(" + i + ")").text()) {
+                            $("#rSubId option:eq(" + i + ")").attr("selected", "selected");
+                        }
+                    }
+                }
+            }
+        }, '-', {
+            text: '删除',
+            iconCls: 'icon-cut',
+            handler: function () {
+                var row = $('#datagridr').datagrid('getSelected');
+                if (row) {
+                    $.messager.confirm("温馨提示", "确定删除吗？[学号：" + row.Id + "]的成绩！", function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/Record/Delete",
+                                type: "POST",
+                                data: { "Id": row.Id },
+                                dataType: "text",
+                                success: function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert("温馨提示", "删除成功！", "info");
+                                        $('#datagridr').datagrid('reload');
+                                    }
+                                    else if (data == "EXIST") {
+                                        $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！删除失败！", "error");
+                                    }
+                                    else {
+                                        $.messager.alert("温馨提示", "删除过程中出现异常，删除失败！", "error");
+                                    }
+                                },
+                            });
+                        }
+                    });
+                }
+            }
+        }];
+
+        $("#rbtnSave").click(function () {
+            if ($("#rStuNo").val() == "" || $("#rExamTime").val() == "" || $("#rTip").val().length > 50) {
+                $.messager.alert("温馨提示", "学号和时间项目必填，申请说明不得超过50个字！", "warning");
+                return;
+            }
+            var SId = $("#rSubId option:selected").val();
+
+            if ($("#rId").val() != "0" && $("#rId").val() != "") {
+                $.ajax({
+                    url: "/Record/Update",
+                    type: "POST",
+                    data: {
+                        "Id": $("#rId").val(), "SubId": SId, "StuNo": $("#rStuNo").val(), "Score": $("#rScore").val(), "ExamTime": $("#rExamTime").val()
+                        ,"TrueScore": $("#rTrueScore").val(), "Tip": $("#rTip").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "修改成功！", "info");
+                            $('#datagridr').datagrid('reload');
+                            $("#Mwin").window("close");
+                        }
+                        else if (data == "EXIST") {
+                            $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！修改失败！", "error");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "修改过程中出现异常，可能已存在此项信息请刷新，修改失败！", "error");
+                        }
+                    },
+                });
+            }
+            else {
+                $.ajax({
+                    url: "/Record/Add",
+                    type: "POST",
+                    data: {
+                        "Id": $("#rId").val(), "SubId": SId, "StuNo": $("#rStuNo").val(), "Score": $("#rScore").val(), "ExamTime": $("#rExamTime").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "新增成功！", "info");
+                            $('#datagridr').datagrid('reload');
+                            $("#Mwin").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "可能已存在此项请刷新，新增失败！", "error");
+                        }
+                    },
+                });
+            }
+        });
+
+        $('#rExamTime').datetimebox({
+            showSeconds: false
+        });
+        function myformatter(date) {
+            var y = date.getFullYear();
+            var m = date.getMonth() + 1;
+            var d = date.getDate();
+            var h = date.getHours();
+            var min = date.getMinutes();
+            var sec = date.getSeconds();
+            var str = y + '/' + (m < 10 ? ('0' + m) : m) + '/' + (d < 10 ? ('0' + d) : d) + ' ' + ' ' + (h < 10 ? ('0' + h) : h) + ':' + (min < 10 ? ('0' + min) : min) + ':' + (sec < 10 ? ('0' + sec) : sec);
+            $("#rExamTime").val(str);
+            return str;
+        }
+        function myparser(s) {
+            if (!s) return new Date();
+            var y = s.substring(0, 4);
+            var m = s.substring(5, 7);
+            var d = s.substring(8, 10);
+            var h = s.substring(11, 14);
+            var min = s.substring(15, 17);
+            var sec = s.substring(18, 20);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d) && !isNaN(h) && !isNaN(min) && !isNaN(sec)) {
+                return new Date(y, m - 1, d, h, min, sec);
+            } else {
+                return new Date();
+            }
+        }
+    </script>
+</body>
+</html>
+

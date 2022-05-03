@@ -1,0 +1,148 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>年级信息管理</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+</head>
+<body>
+    <table class="easyui-datagrid" id="datagridg" fit="true"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Grade/GetAll',method:'get',toolbar:toolbar">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'GId',width:200,align:'center'">年级编号</th>
+                <th data-options="field:'Name',width:200">年级名称</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="Mwindo" class="easyui-window" title="新增" data-options="iconCls:'icon-save',closed:'true',resizable:false" style="width: 423px;height: 268px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_d.jpg);">
+                <input type="hidden" id="gGId" name="GId"  value=""/>
+                <table id="wintb" style="margin:0px auto;height:100%">
+                    <tr><td>年级名称：</td><td><input type="text" id="gName" name="Name" required/></td></tr>
+                </table>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="gbtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#Mwindo').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        var toolbar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function () {
+                $("#Mwindo").window("open");
+                $("#Mwindo").window("setTitle", "新增");
+                $("#gGId").val("0");
+                $("#gName").val("");
+            }
+        }, {
+            text: '修改',
+            iconCls: 'icon-edit',
+            handler: function () {
+                var row = $('#datagridg').datagrid('getSelected');
+                if (row) {
+                    $("#Mwindo").window("open");
+                    $("#Mwindo").window("setTitle", "修改[编号：" + row.GId + "]");
+                    $("#gGId").val(row.GId);
+                    $("#gName").val(row.Name);
+                }
+            }
+        }, '-', {
+            text: '删除',
+            iconCls: 'icon-cut',
+            handler: function () {
+                var row = $('#datagridg').datagrid('getSelected');
+                if (row) {
+                    $.messager.confirm("温馨提示", "确定删除吗？[年级编号：" + row.GId + "]\r\n与此相关的学生信息将全部删除！", function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/Grade/Delete",
+                                type: "POST",
+                                data: { "GId": row.GId },
+                                dataType: "text",
+                                success: function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert("温馨提示", "删除成功！", "info");
+                                        $('#datagridg').datagrid('reload');
+                                    }
+                                    else {
+                                        $.messager.alert("温馨提示", "删除过程中出现异常，删除失败！", "error");
+                                    }
+                                },
+                            });
+                        }
+                    });
+                }
+            }
+        }];
+
+        $("#gbtnSave").click(function () {
+            if ($("#gName").val() == "") {
+                $.messager.alert("温馨提示", "所有项目必填！", "warning");
+                return;
+            }
+            if ($("#gGId").val() != "0" && $("#gGId").val() != "") {
+                $.ajax({
+                    url: "/Grade/Update",
+                    type: "POST",
+                    data: {
+                        "GId": $("#gGId").val(), "Name": $("#gName").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "修改成功！", "info");
+                            $('#datagridg').datagrid('reload');
+                            $("#Mwindo").window("close");
+                        }
+                        else if (data == "EXIST") {
+                            $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！修改失败！", "error");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "修改过程中出现异常，可能已存在此项信息，修改失败！", "error");
+                        }
+                    },
+                });
+            }
+            else {
+                $.ajax({
+                    url: "/Grade/Add",
+                    type: "POST",
+                    data: {
+                        "GId": $("#gGId").val(), "Name": $("#gName").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "新增成功！", "info");
+                            $('#datagridg').datagrid('reload');
+                            $("#Mwindo").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "可能已存在此项，新增失败！", "error");
+                        }
+                    },
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

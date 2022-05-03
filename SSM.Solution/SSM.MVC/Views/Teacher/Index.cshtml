@@ -1,0 +1,192 @@
+﻿@using SSM.Models;
+@{
+    Layout = null;
+    var Jobs = Cache["Job"] as List<Job>;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>教师管理</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+</head>
+<body>
+
+    <table class="easyui-datagrid" id="datagridt" fit="true"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Teacher/GetAll',method:'get',toolbar:toolbar">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'TeaNo',width:100,align:'center'">编号</th>
+                <th data-options="field:'Name',width:200">姓名</th>
+                <th data-options="field:'LoginPwd',width:200">密码</th>
+                <th data-options="field:'Sex',width:100">性别</th>
+                <th data-options="field:'JName',width:200">职务</th>
+            </tr>
+        </thead>
+    </table>
+
+     <div id="win" class="easyui-window" title="新增" data-options="iconCls:'icon-save',closed:'true',resizable:false" style="width: 423px;height: 268px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_d.jpg);">
+                <input type="hidden" id="tOption" value="新增" />
+                <form id="tmyform" action="/Teacher/Add" method="post" enctype="multipart/form-data">
+                    <p id="tNo">编号：<input type="text" id="tTeaNo" name="TeaNo" value=""/></p><br />
+                    <p>姓名：<input id="tName" name="Name" type="text" value="" /></p><br/>
+                    <p>密码：<input type="password" id="tLoginPwd" name="LoginPwd" /></p><br/>
+                    <p>性别：<input type="radio" id="tMan" name="Sex" checked="checked" value="true"/>男
+                             <input type="radio" id="tWoMan" name="Sex" value="false"/>女
+                    </p><br/>
+                    <p>职务：<select id="tJId" name="JId">
+                            @foreach (var job in Jobs)
+                            {
+                                <option value="@job.JId">@job.Name</option>
+                            }
+                          </select>
+                    </p><br/>
+                </form>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="tbtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#win').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        var toolbar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function () {
+                $("#win").window("open");
+                $("#win").window("setTitle", "新增");
+                $("#tTeaNo").val("");
+                $("#tName").val("");
+                $("#tLoginPwd").val("");
+                $("#tOption").val("新增");
+                $("#tNo").css("display", "block");
+            }
+        }, {
+            text: '修改',
+            iconCls: 'icon-edit',
+            handler: function () {
+                var row = $('#datagridt').datagrid('getSelected');
+                if (row) {
+                    $("#win").window("open");
+                    $("#win").window("setTitle", "修改[教师编号：" + row.TeaNo + "]");
+                    $("#tTeaNo").val(row.TeaNo);
+                    $("#tName").val(row.Name);
+                    $("#tLoginPwd").val(row.LoginPwd);
+                    $("#tOption").val("修改");
+                    $("#tNo").css("display", "none");
+
+                    for (var i = 0; i < $("#tJId option").length; i++) {
+                        if (row.JName == $("#tJId option:eq(" + i + ")").text()) {
+                            $("#tJId option:eq(" + i + ")").attr("selected", "selected");
+                        }
+                    }
+                    if (row.Sex=="女") {
+                        $("#tWoMan").attr("checked", "checked");
+                    }
+                    else {
+                        $("#tMan").attr("checked", "checked");
+                    }
+                }
+
+            }
+        }, '-', {
+            text: '删除',
+            iconCls: 'icon-cut',
+            handler: function () {
+                var row = $('#datagridt').datagrid('getSelected');
+                if (row) {
+                    $.messager.confirm("温馨提示", "确定删除吗？[执教编号：" + row.TeaNo + "]！", function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/Teacher/Delete",
+                                type: "POST",
+                                data: { "TeaNo": row.TeaNo },
+                                dataType: "text",
+                                success: function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert("温馨提示", "删除成功！", "info");
+                                        $('#datagridt').datagrid('reload');
+                                    }
+                                    else if (data == "EXIST") {
+                                        $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！删除失败！", "error");
+                                    }
+                                    else {
+                                        $.messager.alert("温馨提示", "删除过程中出现异常，删除失败！", "error");
+                                    }
+                                },
+                            });
+                        }
+                    });
+                }
+            }
+        }];
+
+    $("#tbtnSave").click(function () {
+            if ($("#tTeaNo").val() == "" || $("#tName").val() == "" || $("#tLoginPwd").val() == "") {
+                $.messager.alert("温馨提示", "所有项目必填！", "warning");
+                return;
+            }
+            if ($("#tOption").val() == "修改") {
+                var JobId = $("#tJId option:selected").val();
+                $.ajax({
+                    url: "/Teacher/Update",
+                    type: "POST",
+                    data: {
+                        "TeaNo": $("#tTeaNo").val(), "LoginPwd": $("#tLoginPwd").val(), "Name": $("#tName").val(),
+                        "Sex": $("#tmyform :radio:checked").val(), "JId": JobId
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "修改成功！", "info");
+                            $('#datagridt').datagrid('reload');
+                            $("#win").window("close");
+                        }
+                        else if (data == "EXIST") {
+                            $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！修改失败！", "error");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "修改过程中出现异常，可能已存在此项信息，修改失败！", "error");
+                        }
+                    },
+                });
+            }
+            else {
+                var Job = $("#tJId option:selected").val();
+                $.ajax({
+                    url: "/Teacher/Add",
+                    type: "POST",
+                    data: {
+                        "TeaNo": $("#tTeaNo").val(), "LoginPwd": $("#tLoginPwd").val(), "Name": $("#tName").val(),
+                        "Sex": $("#tmyform :radio:checked").val(), "JId": Job
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "新增成功！", "info");
+                            $('#datagridt').datagrid('reload');
+                            $("#win").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "可能已存在此项，新增失败！", "error");
+                        }
+                    },
+                });
+            }
+
+        });
+
+</script>
+</body>
+</html>

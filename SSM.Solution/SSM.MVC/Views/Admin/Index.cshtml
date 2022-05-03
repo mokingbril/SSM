@@ -1,0 +1,155 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>配置管理员</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+</head>
+<body>
+    <table class="easyui-datagrid" id="datagrida" fit="true"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Admin/GetAll',method:'get',toolbar:toolbar">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'Id',width:100,align:'center'">编号</th>
+                <th data-options="field:'LoginName',width:200">账号</th>
+                <th data-options="field:'LoginPwd',width:100">密码</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="Mwind" class="easyui-window" title="新增" data-options="iconCls:'icon-save',closed:'true',resizable:false" style="width: 423px;height: 268px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_d.jpg);">
+                <input type="hidden" id="aId" name="Id"  value=""/>
+                <table id="wintb" style="margin:0px auto;height:100%">
+                    <tr><td>账号：</td><td><input id="aLoginName" name="LoginName" type="text" required/></td></tr>
+                    <tr><td>密码：</td><td><input type="password" id="aLoginPwd" name="LoginPwd" required/></td></tr>
+                </table>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="abtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#Mwind').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        var toolbar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function () {
+                $("#Mwind").window("open");
+                $("#Mwind").window("setTitle", "新增");
+                $("#aId").val("0");
+                $("#aLoginName").val("");
+                $("#aLoginPwd").val("");
+            }
+        }, {
+            text: '修改',
+            iconCls: 'icon-edit',
+            handler: function () {
+                var row = $('#datagrida').datagrid('getSelected');
+                if (row) {
+                    $("#Mwind").window("open");
+                    $("#Mwind").window("setTitle", "修改[编号：" + row.Id + "]");
+                    $("#aId").val(row.Id);
+                    $("#aLoginName").val(row.LoginName);
+                    $("#aLoginPwd").val(row.LoginPwd);
+                }
+            }
+        }, '-', {
+            text: '删除',
+            iconCls: 'icon-cut',
+            handler: function () {
+                var row = $('#datagrida').datagrid('getSelected');
+                if (row) {
+                    $.messager.confirm("温馨提示", "确定删除吗？[编号：" + row.Id + "]", function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/Admin/Delete",
+                                type: "POST",
+                                data: { "Id": row.Id },
+                                dataType: "text",
+                                success: function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert("温馨提示", "删除成功！", "info");
+                                        $('#datagrida').datagrid('reload');
+                                    }
+                                    else if (data == "EXIST") {
+                                        $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！删除失败！", "error");
+                                    }
+                                    else {
+                                        $.messager.alert("温馨提示", "删除过程中出现异常，删除失败！", "error");
+                                    }
+                                },
+                            });
+                        }
+                    });
+                }
+            }
+        }];
+
+        $("#abtnSave").click(function () {
+            if ($("#aLoginName").val() == "" || $("#aLoginPwd").val() == "") {
+                $.messager.alert("温馨提示", "所有项目必填！", "warning");
+                return;
+            }
+            if ($("#aId").val() != "0" && $("#aId").val() != "") {
+                $.ajax({
+                    url: "/Admin/Update",
+                    type: "POST",
+                    data: {
+                        "Id": $("#aId").val(), "LoginName": $("#aLoginName").val(), "LoginPwd": $("#aLoginPwd").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "修改成功！", "info");
+                            $('#datagrida').datagrid('reload');
+                            $("#Mwind").window("close");
+                        }
+                        else if (data == "EXIST") {
+                            $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！修改失败！", "error");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "修改过程中出现异常，可能已存在此项信息，修改失败！", "error");
+                        }
+                    },
+                });
+            }
+            else {
+                $.ajax({
+                    url: "/Admin/Add",
+                    type: "POST",
+                    data: {
+                        "Id": $("#aId").val(), "LoginName": $("#aLoginName").val(), "LoginPwd": $("#aLoginPwd").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "新增成功！", "info");
+                            $('#datagrida').datagrid('reload');
+                            $("#Mwind").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "可能已存在此项，新增失败！", "error");
+                        }
+                    },
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

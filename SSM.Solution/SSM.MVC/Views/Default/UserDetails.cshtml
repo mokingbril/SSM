@@ -1,0 +1,49 @@
+﻿@using SSM.Models;
+@{
+    Layout = null;
+    var User = ViewBag.User;
+    int RoleId = ViewBag.RoleId;
+    var AllJob=Cache["Job"] as List<Job>;
+    var AllDepartment = Cache["Department"] as List<Department>;
+    var AllGrade = Cache["Grade"] as List<Grade>;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>个人档案</title>
+</head>
+<body>
+    <div style="width:100%;height:100%;background:url(../Content/Images/back.png);">
+        <table style="margin-left:100px;font-size:18px;color:green;padding-top:25px;">
+        @if (RoleId == 1)
+        {
+            <tr><td><img src="~/Content/Images/GId.png" style="border:0px;" />[编号]</td><td>@User.Id</td></tr>
+            <tr><td><img src="~/Content/Images/Lo.png" />[账号]</td><td>@User.LoginName</td></tr>
+            <tr><td><img src="~/Content/Images/ke.png" />[密码]</td><td>@User.LoginPwd</td></tr>
+        }
+        else if (RoleId == 2)
+        {
+            <tr><td><img src="~/Content/Images/Lo.png" />[学号]</td><td>@User.StuNo</td></tr>
+            <tr><td><img src="~/Content/Images/GId.png" />[姓名]</td><td>@User.Name</td></tr>
+            <tr><td><img src="~/Content/Images/ke.png" />[密码]</td><td>@User.LoginPwd</td></tr>
+            <tr><td><img src="~/Content/Images/se.png" />[性别]</td><td>@if (User.Sex){@("男");}else{@("女");}</td></tr>
+            <tr><td><img src="~/Content/Images/hom.png" />[系院]</td><td>@foreach (var dt in AllDepartment){if (dt.DId==User.DId){<span>@dt.Name</span>}}</td></tr>
+            <tr><td><img src="~/Content/Images/De.png" />[年级]</td><td>@foreach (var gd in AllGrade){if (gd.GId==User.GId){<span>@gd.Name</span>}}</td></tr>
+            <tr><td><img src="~/Content/Images/ph.png" />[联系方式]</td><td>@User.Phone</td></tr>
+            <tr><td><img src="~/Content/Images/bri.png" />[出生年月]</td><td>@User.Birthday</td></tr>
+            <tr><td><img src="~/Content/Images/ho.png" />[详细地址]</td><td>@User.Address</td></tr>
+        }
+        else
+        {
+            <tr><td><img src="~/Content/Images/Lo.png" />[执教编号]</td><td>@User.TeaNo</td></tr>
+            <tr><td><img src="~/Content/Images/GId.png" />[姓名]</td><td>@User.Name</td></tr>
+            <tr><td><img src="~/Content/Images/ke.png" />[密码]</td><td>@User.LoginPwd</td></tr>
+            <tr><td><img src="~/Content/Images/se.png" />[性别]</td><td>@if (User.Sex){@("男");}else{@("女");}</td></tr>
+            <tr><td><img src="~/Content/Images/jo.png" />[职务]</td><td>@foreach (var job in AllJob){if (job.JId==User.JId){<span>@job.Name</span>}}</td></tr>
+        }
+        </table>
+    </div>
+</body>
+</html>

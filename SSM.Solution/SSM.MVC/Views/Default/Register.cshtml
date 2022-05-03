@@ -1,0 +1,173 @@
+﻿@{
+    Layout = null;
+}
+@using SSM.Models
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>用户注册</title>
+    <link href="~/Content/SSM.css" rel="stylesheet" />
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.validate.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+    @{
+        var departments = Cache["Department"] as List<Department>;
+        var grades = Cache["Grade"] as List<Grade>;
+        var jobs = Cache["Job"] as List<Job>;
+
+        var s = ViewBag.StuCount;
+        var t = ViewBag.TeaCount;
+        string stuNo = "";
+        string teaNo = "";
+        if ((s+1) / 10 > 0){stuNo = "S150" + (s+1);}
+        else if ((s + 1) / 100 > 0){stuNo = "S15" + (s+1);}
+        else{stuNo = "S1500" + (s+1);}
+        if ((t + 1 )/ 10 > 0){teaNo = "T150" + (t+1);}
+        else if ((t + 1 )/ 100 > 0){teaNo = "T15" + (t+1);}
+        else{teaNo = "T1500" + (t+1);}
+    }
+</head>
+<body class="Main">
+    <div style="margin:40px auto;text-align:center;color:green;"><h2>学生成绩管理系统</h2></div>
+    <div class="Register">
+        <h3 style="color:green;background-color:grey;">欢迎注册</h3>
+        <form id="form" method="post" action="/Default/Register">
+            <div class="sred">
+                <p style="padding-top:10px;">身&nbsp;&nbsp;份：<select id="Rtype" name="role"><option value="2">学生</option>
+                                <option value="3">教师</option></select><span style="color:red;font-size:14px;">[*为必填项]</span></p>
+                <p id="student">学&nbsp;&nbsp;号：<input type="text" id="StuNo" name="StuNo" required value="@stuNo" class="LoginName" RId="2"/><span>*</span></p>
+                <p id="teacher" style="display:none;">教师编号：<input type="text" id="TeaNo" name="TeaNo" required value="@teaNo" class="LoginName" RId="3"/><span>*</span></p>
+                <p>密&nbsp;&nbsp;码：<input type="password" id="LoginPwd" name="LoginPwd" required value="" /><span>*</span></p>
+                <p>确认密码：<input type="password" id="AgainPwd" name="AgainPwd" required value="" /><span>*</span></p>
+                <p>名&nbsp;&nbsp;称：<input type="text" id="Name" name="Name" required value="" /><span>*</span></p>
+                <p>性别：
+                    <input type="radio" id="Man" name="sex" value="1" checked />男
+                    <input type="radio" id="Woman" name="sex" value="0" />女
+                </p>
+                
+                <p  id="JID" style="display:none;">
+                    <span style="color:black;font-weight:initial;">职&nbsp;&nbsp;务：</span>
+                    <select id="Jtype" name="job">
+                        @foreach (var j in jobs){
+                            <option value="@j.JId">@j.Name</option>}
+                    </select>
+                </p>
+            </div>
+            <div id="buttom">
+                <p><span>班&nbsp;&nbsp;级：</span>
+                    <select id="Dtype" name="department">
+                        @foreach (var d in departments){
+                            <option value="@d.DId">@d.Name</option>}
+                    </select>
+                    <select id="Gtype" name="gride">
+                        @foreach (var g in grades){
+                            <option value="@g.GId">@g.Name</option>}
+                    </select></p>
+                <p><span>电&nbsp;&nbsp;话：</span><input id="Phone" name="Phone" value="" /></p>
+                <p><span>地&nbsp;&nbsp;址：</span><input id="Address" name="Address" value="" /></p>
+                <p><span>生&nbsp;&nbsp;日：</span><input id="Birthday" name="Birthday" type="date" editable="false"
+                    class="easyui-datebox" data-options="formatter:myformatter,parser:myparser,onSelect:onSelect" /></p>
+            </div>
+            <p class="sred">验证码：<img src="/Common/CheckCode"/><input type="text" id="CheckCode" name="CheckCode" required /><span>*</span></p>
+            <p><input type="submit" id="save" class="btnRegister" value=""/>&nbsp;&nbsp;&nbsp;<input type="button" id="cancel" class="btnCancel"/></p>
+            <p style="color:red;font-weight:bolder;margin-left:5px;" id="Messages">@ViewBag.ErrorInfo</p>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+
+        $("#form").validate({
+            rules: {
+                Name: { required: true },
+                LoginPwd: { required: true },
+                AgainPwd: { required: true, equalTo: "#LoginPwd" },
+                Phone: { number: true },
+                Birthday: { date: true },
+                CheckCode: { required: true },
+            },
+            messages: {
+                Name: { required: "请输入姓名" },
+                LoginPwd: { required: "请输入密码" },
+                AgainPwd: { required: "必须填写密码", equalTo: "密码不一致" },
+                Phone: { number: "请输入有效的联系方式" },
+                Birthday: { date: "请输入有效的日期格式" },
+                CheckCode: { required: "请输入验证码" },
+            }
+        });
+
+        $(function () {
+            $("#Rtype").change(function () {
+                if ($("#Rtype").val() == 2) {
+                    $("TeaNo").removeProp("value");
+                    $("#teacher").hide();
+                    $("#student").show();
+                    $("#JID").hide();
+                    $("#buttom").show();
+                }
+                else if ($("#Rtype").val() == 3) {
+                    $("StuNo").removeProp("value");
+                    $("#teacher").show();
+                    $("#student").hide();
+                    $("#JID").show();
+                    $("#buttom").hide();
+                }
+            });
+
+            $(".LoginName").blur(function () {
+                if ($(this).val() == "") {
+                    $.messager.alert("温馨提示", "编号不能为空！", "warning");
+                    return;
+                }
+                $.ajax({
+                    url: "/Default/CheckLoginName",
+                    type: "POST",
+                    data: { "LoginName": $(this).val(), "RId": $(this).attr("RId") },
+                    dataType: "text",
+                    success: function (data) {
+                        $(".LoginName").next().text(data).css("color", "red");
+                        if (data == "此号有效√") {
+                            $(".LoginName").next().text(data).css("color", "green");
+                        }
+                    },
+                });
+            });
+        });
+
+        $("#cancel").click(function () {
+            location.href = "/Default/Login";
+        });
+
+        if ($("#Messages").text() != "") {
+            $.messager.alert("温馨提示", $("#Messages").text(), "error");
+        }
+
+        function myformatter(date) {
+            var y = date.getFullYear();
+            var m = date.getMonth() + 1;
+            var d = date.getDate();
+            return y + '/' + (m < 10 ? ('0' + m) : m) + '/' + (d < 10 ? ('0' + d) : d);
+        }
+        function myparser(s) {
+            if (!s) return new Date();
+            var ss = (s.split('/'));
+            var y = parseInt(ss[0], 10);
+            var m = parseInt(ss[1], 10);
+            var d = parseInt(ss[2], 10);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                return new Date(y, m - 1, d);
+            } else {
+                return new Date();
+            }
+        }
+        function onSelect(date) {
+            $("#Birthday").val(myformatter(date));
+        }
+    </script>
+</body>
+</html>

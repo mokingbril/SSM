@@ -1,0 +1,169 @@
+﻿@using SSM.Models;
+@using SSM.MVC.Models;
+@{
+    var User=Session["LoginUser"] as UserVo;
+    Layout = null;
+    var AllDepartment = Cache["Department"] as List<Department>;
+    var AllGrade = Cache["Grade"] as List<Grade>;
+    var AllSubject = ViewBag.Subs as List<Subject>;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>成绩查询</title>
+    <script src="~/Scripts/jquery-1.7.1.min.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+    <link href="~/Content/default/easyui.css" rel="stylesheet" />
+    <link href="~/Content/icon.css" rel="stylesheet"/>
+</head>
+<body>
+    <div id="datagridsearch">
+        <select id="Options" name="Options"><option value="7">所有考生</option>
+            <option value="1" selected="selected">学号</option><option value="2">课程名称</option><option value="3">系部名称</option>
+            <option value="4">年级名称</option><option value="8">考试时间</option><option value="5">分数线</option><option value="6">所有缺考</option>
+        </select>：<input id="kword" name="kword" type="text" value="" style="width:150px;" />
+        <input type="button" id="btnSelect" value="查询" style="background:url(../Content/Images/button.bmp);width:71px;height:22px;border:0px;margin-right:30px;"/>
+        <select id="Department" name="Department">@foreach (var dp in AllDepartment){<option value="@dp.DId">@dp.Name</option>}</select>
+        <select id="Grade" name="Grade">@foreach (var gd in AllGrade){<option value="@gd.GId">@gd.Name</option>}<option value="0" selected="selected">所有年级</option></select>
+        <select id="Subject" name="Subject">@foreach (var sj in AllSubject){<option value="@sj.SubId">@sj.Name</option>}<option value="0" selected="selected">所有课程</option></select>
+        <select id="Scores" name="Scores"><option value="1" selected="selected">所有成绩</option><option value="-1">缺考</option><option value="0">0</option><option value="50">不及格</option>
+            <option value="60">及格60</option><option value="80">良好80</option><option value="90">优秀90</option><option value="100">满分100</option></select>
+        <input type="button" id="btnSeek" value="分级查询" style="background:url(../Content/Images/button.bmp);width:71px;height:22px;border:0px;"/>
+        @if (User.RId==2){<input type="button" id="btnErrorApply" value="错误申请" 
+                style="background:url(../Content/Images/button.bmp);width:71px;height:22px;border:0px;margin-left:50px;color:red;"/>}
+    </div>
+    <input type="hidden" id="RID" name="@User.LoginName" value="@User.RId" />
+    <table class="easyui-datagrid" id="datagridk" style="width:1090px;height:500px;"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Record/GetStu',method:'get'">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'StuNo',width:100">学号</th>
+                <th data-options="field:'SubName',width:200">课程名称</th>
+                <th data-options="field:'Name',width:100">姓名</th>
+                <th data-options="field:'Sex',width:100">性别</th>
+                <th data-options="field:'DName',width:100">系部</th>
+                <th data-options="field:'GName',width:100">年级</th>
+                <th data-options="field:'Score',width:100,">分数</th>
+                @if (User.RId==2)
+                {
+                    <th data-options="field:'ExamTime',width:100,">考试时间</th>
+                    <th data-options="field:'Tip',width:100,">申请说明</th>
+                    <th data-options="field:'TrueScore',width:100,">修正分数</th>
+                }
+                else
+                {
+                     <th data-options="field:'ExamTime',width:200,">考试时间</th>
+                }
+            </tr>
+        </thead>
+    </table>
+
+    <div id="Meay" class="easyui-window" title="错误申请" data-options="iconCls:'icon-save',closed:'true'" style="width: 423px;height: 268px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_d.jpg);">
+                <table style="margin:0px auto;height:100%">
+                    <tr><td>申请说明：</td><td><textarea id="Tip" name="Tip" cols="25" rows="3"></textarea></td></tr>
+                    <tr><td>修正分数：</td><td><input type="text" id="TrueScore" name="TrueScore" value=""/></td></tr>
+                </table>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="kbtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#Meay').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        $("#btnSelect").click(function () {
+            if (($("#Options option:selected").val() != "6" && $("#Options option:selected").val() != "7") && $("#kword").val() == "") {
+                $.messager.alert("温馨提示", "请输入相关信息查询！", "info");
+                return;
+            }
+            $('#datagridk').datagrid('reload', {
+                url: "/Record/GetStu",
+                data: { "StuNo": $("#kword").val(), "Option": $("#Options option:selected").val() }
+            });
+
+            progress();
+        });
+
+        $("#btnSeek").click(function () {
+            $('#datagridk').datagrid('reload', {
+                url: "/Record/GetStu",
+                data: { "DID": $("#Department option:selected").val(), "GID": $("#Grade option:selected").val()
+                    , "SubID": $("#Subject option:selected").val(), "Score": $("#Scores option:selected").val(), "Level": "true"
+                }
+            });
+        })
+
+        var kSubName;
+        var kStuNo;
+        $(function () {
+            if ($("#RID").val() == "2") {
+                $("#kword").val($("#RID").attr("name")).attr("disabled", "");
+                $("#Options").attr("disabled", "");
+                $("#btnSeek").attr("disabled", "");
+            }
+
+            $("#btnErrorApply").click(function () {
+                var krow = $('#datagridk').datagrid('getSelected');
+                if (krow) {
+                    $("#Meay").window("open");
+                    $("#Meay").window("setTitle", "错误申请【课程：" + krow.SubName + "】");
+                    $("#Tip").val(krow.Tip);
+                    $("#TrueScore").val(krow.Score);
+                    kSubName = krow.SubName;
+                    kStuNo = krow.StuNo;
+                }
+                else {
+                    $.messager.alert('温馨提示', "请点击“查询”按钮，并选中一行进行错误申请操作！\r\n若无成绩，可进入“申请录入成绩专区”请求录入成绩！", 'info');
+                }
+            });
+
+            $("#kbtnSave").click(function () {
+                if ($("#Tip").val().length>50) {
+                    $.messager.alert("温馨提示", "申请说明不能超过50个字！", "warning");
+                    return;
+                }
+                $.ajax({
+                    url: "/Record/ErrorApply",
+                    type: "POST",
+                    data: {
+                        "StuNo": kStuNo, "SubName": kSubName, "Tip": $("#Tip").val(), "TrueScore": $("#TrueScore").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "申请成功！", "info");
+                            $('#datagridk').datagrid('reload');
+                            $("#Meay").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "申请过程中出现异常,可能说明文字超过限制或此成绩已删除!申请失败！", "info");
+                        }
+                    },
+                });
+            })
+        })
+        
+        function progress() {
+            var win = $.messager.progress({
+                title: '请稍等',
+                msg: '成绩查询中......'
+            });
+            setTimeout(function () {
+                $.messager.progress('close');
+                if ($('#datagridk').datagrid('getRows')==0) {
+                    $.messager.alert("温馨提示", "成绩为空！", "warning");
+                }
+            }, 3000)
+        }
+    </script>
+</body>
+</html>

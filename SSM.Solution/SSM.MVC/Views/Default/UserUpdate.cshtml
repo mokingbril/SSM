@@ -1,0 +1,62 @@
+﻿@using SSM.Models;
+@{
+    Layout = null;
+    var User = ViewBag.User;
+    int RoleId = ViewBag.RoleId;
+    var AllJob=Cache["Job"] as List<Job>;
+    var AllDepartment = ViewBag.AllD as List<Department>;
+    var AllGrade = ViewBag.AllG as List<Grade>;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>修改个人信息</title>
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+</head>
+<body>
+    <div style="width:100%;height:100%;background:url(../Content/Images/back.png);padding-top:50px;">
+        <form action="/Default/UserUpdate" method="post" id="fmUpdate"
+            style="background-color:white;font-size:18px;width:500px;margin:0px auto;">
+        <h3 style="line-height:30px;background-color:gray;text-align:center;">修改个人档案</h3>
+        <table style="width:100%;margin:auto 30px;">
+        @if (RoleId == 1)
+        {
+            <tr><td><img src="~/Content/Images/GId.png" />[编号]</td><td>@User.Id<input type="hidden" id="Id" name="Id" value="@User.Id"/></td></tr>
+            <tr><td><img src="~/Content/Images/Lo.png" />[账号]</td><td><input type="text" required id="LoginName" name="LoginName" value="@User.LoginName"/></td></tr>
+            <tr><td><img src="~/Content/Images/ke.png" />[密码]</td><td><input type="password" required id="LoginPwd" name="LoginPwd" value="@User.LoginPwd"/></td></tr>
+        }
+        else if (RoleId == 2)
+        {
+            <tr><td><img src="~/Content/Images/Lo.png" />[学号]</td><td>@User.StuNo<input type="hidden" id="StuNo" name="StuNo" value="@User.StuNo"/></td></tr>
+            <tr><td><img src="~/Content/Images/GId.png" />[姓名]</td><td><input type="text" id="Name" required  name="Name" value="@User.Name"/></td></tr>
+            <tr><td><img src="~/Content/Images/ke.png" />[密码]</td><td><input type="password"id="LoginPwd" required  name="LoginPwd" value="@User.LoginPwd"/></td></tr>
+            <tr><td><img src="~/Content/Images/se.png" />[性别]</td><td>@if (User.Sex){<input type="radio" id="Man" name="Sex" checked="checked" value="true"/>@("男");
+                    <input type="radio" id="WoMan" name="Sex" value="false"/>@("女");}else{<input type="radio" id="Man" name="Sex" value="true"/>@("男");
+                    <input type="radio" id="WoMan" name="Sex" checked="checked" value="false"/>@("女");}</td></tr>
+            <tr><td><img src="~/Content/Images/hom.png" />[系院]</td><td><select id="DId" name="DId">@foreach (var dt in AllDepartment){if (dt.DId==User.DId)
+                    {<option value="@dt.DId" selected="selected">@dt.Name</option> continue;}<option value="@dt.DId">@dt.Name</option>}</select></td></tr>
+            <tr><td><img src="~/Content/Images/De.png" />[年级]</td><td><select id="GId" name="GId">@foreach (var gd in AllGrade){if (gd.GId==User.GId)
+                    {<option value="@gd.GId" selected="selected">@gd.Name</option> continue;}<option value="@gd.GId">@gd.Name</option>}</select></td></tr>
+            <tr><td><img src="~/Content/Images/ph.png" />[联系方式]</td><td><input type="text" id="Phone" name="Phone" value="@User.Phone"/></td></tr>
+            <tr><td><img src="~/Content/Images/bri.png" />[出生年月]</td><td><input id="Birthday" type="datetime"  name="Birthday" value="@User.Birthday" /></td></tr>
+            <tr><td><img src="~/Content/Images/ho.png" />[详细地址]</td><td><input type="text" id="Address" name="Address" value="@User.Address"/></td></tr>
+        }
+        else
+        {
+            <tr><td><img src="~/Content/Images/Lo.png" />[执教编号]</td><td>@User.TeaNo<input type="hidden" id="LoginName" name="TeaNo" value="@User.TeaNo"/></td></tr>
+            <tr><td><img src="~/Content/Images/GId.png" />[姓名]</td><td><input type="text" required id="Name" name="Name" value="@User.Name"/></td></tr>
+            <tr><td><img src="~/Content/Images/ke.png" />[密码]</td><td><input type="password" required id="LoginPwd" name="LoginPwd" value="@User.LoginPwd"/></td></tr>
+            <tr><td><img src="~/Content/Images/se.png" />[性别]</td><td>@if (User.Sex){<input type="radio" id="Man" name="Sex" checked="checked" value="true"/>@("男");
+                    <input type="radio" id="WoMan" name="Sex" value="false"/>@("女");}else{<input type="radio" id="Man" name="Sex" value="true"/>@("男");
+                    <input type="radio" id="WoMan" name="Sex" checked="checked" value="false"/>@("女");}</td></tr>
+            <tr><td><img src="~/Content/Images/jo.png" />[职务]</td><td><select id="JId" name="JId">@foreach (var job in AllJob){if (job.JId==User.JId)
+                    {<option value="@job.JId" selected="selected">@job.Name</option> continue;}<option value="@job.JId">@job.Name</option>}</select></td></tr>
+        }
+            <tr><td></td><td><input type="submit" value="确定" style="background:url(../Content/Images/button.bmp);width:71px;height:22px;border:0px;"/></td></tr>
+        </table>
+        </form>
+    </div>
+</body>
+</html>

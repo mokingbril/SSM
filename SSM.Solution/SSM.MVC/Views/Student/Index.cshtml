@@ -1,0 +1,229 @@
+﻿@using SSM.Models;
+@{
+    Layout = null;
+    var Departments = Cache["Department"] as List<Department>;
+    var Grades = Cache["Grade"] as List<Grade>;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>学生管理</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+</head>
+<body>
+    <table class="easyui-datagrid" id="datagrids" fit="true"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Student/GetAll',method:'get',toolbar:toolbar">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'StuNo',width:100,align:'center'">学号</th>
+                <th data-options="field:'Name',width:100">姓名</th>
+                <th data-options="field:'LoginPwd',width:100">密码</th>
+                <th data-options="field:'Sex',width:50,align:'center'">性别</th>
+                <th data-options="field:'DName',width:100">系院</th>
+                <th data-options="field:'GName',width:100">年级</th>
+                <th data-options="field:'Phone',width:100">电话</th>
+                <th data-options="field:'Birthday',width:100">出生年月</th>
+                <th data-options="field:'Address',width:300">地址</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="Mywin" class="easyui-window" title="新增" data-options="iconCls:'icon-save',closed:'true'" style="width: 450px; height: 400px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_c.jpg);">
+                <p class="No" style="text-align:center;"><span style="color:red;">*</span>学号：<input type="text" id="sStuNo" name="StuNo" value=""/></p>
+                <table id="swintb" style="margin:0px auto;height:100%">
+                    <tr><td><span style="color:red;">*</span>姓名：</td><td><input id="sName" name="Name" type="text" value="" required /></td></tr>
+                    <tr><td><span style="color:red;">*</span>密码：</td><td><input type="password" id="sLoginPwd" name="LoginPwd" required/></td></tr>
+                    <tr><td><span style="color:red;">*</span>性别：</td><td><input type="radio" id="sMan" name="Sex" checked="checked" value="true"/>男
+                                  <input type="radio" id="sWoMan" name="Sex" value="false"/>女</td></tr>
+                    <tr><td><span style="color:red;">*</span>系院：</td><td><select id="sDId" name="DId">
+                           @foreach (var d in Departments){<option value="@d.DId">@d.Name</option>}</select></td></tr>
+                    <tr><td><span style="color:red;">*</span>年级：</td><td><select id="sGId" name="GId">
+                           @foreach (var g in Grades){<option value="@g.GId">@g.Name</option>}</select></td></tr>
+                    <tr><td>电话：</td><td><input id="sPhone" name="Phone" type="text" value="" /></td></tr>
+                    <tr><td>生日：</td><td><input id="sBirthday" name="Birthday"  type="date" class="easyui-datebox" 
+                        data-options="formatter:myformatter,parser:myparser,onSelect:onSelect"/></td></tr>
+                    <tr><td>地址：</td><td><input id="sAddress" name="Address" type="text" value="" /></td></tr>
+                </table>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="sbtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#Mywin').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        var toolbar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function () {
+                $("#Mywin").window("open");
+                $("#Mywin").window("setTitle", "新增");
+                $("#sStuNo").val("");
+                $("#sName").val("");
+                $("#sPhone").val("");
+                $("#sAddress").val("");
+                $("#sLoginPwd").val("");
+                $(".No").css("display", "block");
+            }
+        }, {
+            text: '修改',
+            iconCls: 'icon-edit',
+            handler: function () {
+                var row = $('#datagrids').datagrid('getSelected');
+                if (row) {
+                    $("#Mywin").window("open");
+                    $("#Mywin").window("setTitle", "修改[学号：" + row.StuNo + "]");
+                    $("#sStuNo").val(row.StuNo);
+                    $("#sName").val(row.Name);
+                    $("#sLoginPwd").val(row.LoginPwd);
+
+                    for (var i = 0; i < $("#sDId option").length; i++) {
+                        if (row.DName == $("#sDId option:eq(" + i + ")").text()) {
+                            $("#sDId option:eq(" + i + ")").attr("selected", "selected");
+                        }
+                    }
+                    for (var i = 0; i < $("#sGId option").length; i++) {
+                        if (row.GName == $("#sGId option:eq(" + i + ")").text()) {
+                            $("#sGId option:eq(" + i + ")").attr("selected", "selected");
+                        }
+                    }
+                    if (row.Sex == "女") {
+                        $("#sWoMan").attr("checked", "checked");
+                    }
+                    else {
+                        $("#sMan").attr("checked", "checked");
+                    }
+
+                    $("#sPhone").val(row.Phone);
+                    $("#sBirthday").val(row.Birthday);
+                    $("#sAddress").val(row.Address);
+                    $(".No").css("display", "none");
+                }
+
+            }
+        }, '-', {
+            text: '删除',
+            iconCls: 'icon-cut',
+            handler: function () {
+                var row = $('#datagrids').datagrid('getSelected');
+                if (row) {
+                    $.messager.confirm("温馨提示", "确定删除吗？[学号：" + row.StuNo + "]\r\n与此学生关联的成绩等数据将会删除！", function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/Student/Delete",
+                                type: "POST",
+                                data: { "StuNo": row.StuNo },
+                                dataType: "text",
+                                success: function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert("温馨提示", "删除成功！", "info");
+                                        $('#datagrids').datagrid('reload');
+                                    }
+                                    else if (data == "EXIST") {
+                                        $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！删除失败！", "error");
+                                    }
+                                    else {
+                                        $.messager.alert("温馨提示", "删除过程中出现异常，删除失败！", "error");
+                                    }
+                                },
+                            });
+                        }
+                    });
+                }
+            }
+        }];
+
+        $("#sbtnSave").click(function () {
+            if ($("#sStuNo").val() == "" || $("#sName").val() == "" || $("#sLoginPwd").val() == "") {
+                $.messager.alert("温馨提示", "红色*项目必填！", "warning");
+                return;
+            }
+            if ($(".No").css("display")=="none") {
+                var DptId = $("#sDId option:selected").val();
+                var GrdId = $("#sGId option:selected").val();
+                $.ajax({
+                    url: "/Student/Update",
+                    type: "POST",
+                    data: {
+                        "StuNo": $("#sStuNo").val(), "LoginPwd": $("#sLoginPwd").val(), "Name": $("#sName").val(),
+                        "Sex": $("#swintb :radio:checked").val(), "DId": DptId, "GId": GrdId,
+                        "Phone": $("#sPhone").val(), "Birthday": $("#sBirthday").val(), "Address": $("#sAddress").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "修改成功！", "info");
+                            $('#datagrids').datagrid('reload');
+                            $("#Mywin").window("close");
+                        }
+                        else if (data == "EXIST") {
+                            $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！修改失败！", "error");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "修改过程中出现异常！可能选项值不存在，修改失败！", "error");
+                        }
+                    },
+                });
+            }
+            else {
+                var DtId = $("#sDId option:selected").val();
+                var GdId = $("#sGId option:selected").val();
+                $.ajax({
+                    url: "/Student/Add",
+                    type: "POST",
+                    data: {
+                        "StuNo": $("#sStuNo").val(), "LoginPwd": $("#sLoginPwd").val(), "Name": $("#sName").val(),
+                        "Sex": $("#swintb :radio:checked").val(), "DId": DtId, "GId": GdId,
+                        "Phone": $("#sPhone").val(), "Birthday": $("#sBirthday").val(), "Address": $("#sAddress").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "新增成功！", "info");
+                            $('#datagrids').datagrid('reload');
+                            $("#Mywin").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "可能已存在此项或选项值异常，新增失败！", "error");
+                        }
+                    },
+                });
+            }
+        });
+
+        function myformatter(date) {
+            var y = date.getFullYear();
+            var m = date.getMonth() + 1;
+            var d = date.getDate();
+            return y + '/' + (m < 10 ? ('0' + m) : m) + '/' + (d < 10 ? ('0' + d) : d);
+        }
+        function myparser(s) {
+            if (!s) return new Date();
+            var ss = (s.split('/'));
+            var y = parseInt(ss[0], 10);
+            var m = parseInt(ss[1], 10);
+            var d = parseInt(ss[2], 10);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                return new Date(y, m - 1, d);
+            } else {
+                return new Date();
+            }
+        }
+        function onSelect(date) {
+            $("#sBirthday").val(myformatter(date));
+        }
+    </script>
+</body>
+</html>

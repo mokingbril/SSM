@@ -1,0 +1,161 @@
+﻿@using SSM.MVC.Models
+@{
+    Layout = null;
+    var user = Session["LoginUser"] as UserVo;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>学生成绩管理系统</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+    <script src="~/Scripts/easyui-lang-zh_CN.js"></script>
+
+    <style type="text/css">
+        * {margin: 0px;padding: 0px;}
+        .mymenu {margin: 10px;padding-top:10px;background-color: gray;font-weight: bold;height: 25px;text-align: center;}
+        #Logo{background:url(../Content/Images/logo.png);height:50px;text-align: center; font-size: 30px;color:green;}
+        .hello{font-size: 14px;font-weight:bold;padding-left:20px;}
+        a{color:orange;text-decoration:none;font-size: 15px;font-weight:bold;}
+        .Logout {float:right;text-align:center;background:url(../Content/Images/btnlogout.png);width:70px;margin:10px;}
+
+        .login_b {
+            margin:100px auto;
+            width:580px;
+            height:300px;
+            font-size:14px;
+            text-align:center;
+
+            margin-top:100px;
+            border:1px solid white;
+            border-top:0px;
+        }
+        .login_btn {width:85px; height:22px; text-align:center; border:none; line-height:22px;}
+        #tbLogin {margin: 0px auto;height:180px;}
+        #tbLogin input { float: left;}
+    </style>
+</head>
+<body class="easyui-layout">
+    <div region="north" id="Logo" >
+        <p fit="true">学生成绩管理系统<span class="hello">您好！@user.LoginName</span><a class="Logout" href="/Default/Logout">注销</a></p>
+    </div>
+    <div region="west" split="true" title="系统菜单" style="width: 250px;">
+        <div id="aa" class="easyui-accordion" data-options="fit:true">
+            @if (user.RId==1){
+                <div title="账户管理"  style="overflow: auto; padding: 10px;">
+                    <p class="mymenu" targeturl="/Teacher/Index">教师管理</p>
+                    <p class="mymenu" targeturl="/Student/Index">学生管理</p>
+                    <p class="mymenu" targeturl="/Admin/Index">配置管理员</p>
+                </div>}
+            <div title="业务管理" selected="true" style="padding: 10px;">
+                <p class="mymenu" targeturl="/Record/Seek">成绩查询</p>
+                @if (user.RId==1){
+                    <p class="mymenu" targeturl="/Record/Index">成绩管理</p>
+                    <p class="mymenu" targeturl="/Record/Index">错误申请处理</p>}
+                else if (user.RId == 3){<p class="mymenu" targeturl="/Record/Inserts">录入成绩</p>}
+                else{
+                    <p class="mymenu" targeturl="/Record/Seek">错误申请</p>
+                    <p class="mymenu" targeturl="/Record/ApplyInsert">申请录入成绩专区</p>}
+            </div>
+            <div title="信息管理"  style="padding:10px;">
+                <p class="mymenu" targeturl="/Default/UserDetails">个人详细信息</p>
+                <p class="mymenu" targeturl="/Default/UserUpdate">修改个人信息</p>
+                @if (user.RId == 1)
+                {
+                    <p class="mymenu" targeturl="/Subject/Index">课程信息管理</p>
+                    <p class="mymenu" targeturl="/Grade/Index">年级信息管理</p>
+                    <p class="mymenu" targeturl="/Department/Index">系院信息管理</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div region="center" style="padding: 5px; background: #eee;">
+        <div id="tt" class="easyui-tabs"  data-options="fit:true">
+            <div title="简介" style="padding:100px 400px;background:url(../Content/Images/back.png);"  data-options="closable:true">
+                <h1 style="color:orange;">欢迎使用学生成绩管理系统</h1><br/>
+                谢谢您的参与！
+            </div>
+        </div>
+    </div>
+
+    <div id="mm" class="easyui-menu" data-options="onClick:menuHandler" style="width:120px;">
+		<div data-options="name:'Exit'" id="CurrorTab" title='简介'>关闭当前选项卡</div>
+		<div data-options="name:'Others'">关闭其他选项卡</div>
+		<div class="menu-sep"></div>
+        <div data-options="name:'AllExit'">关闭所有选项卡</div>
+	</div>
+
+    <script type="text/javascript">
+        //选项卡菜单功能触发事件；
+        function menuHandler(item) {
+            item.title = $("#CurrorTab").attr("title");
+            if (item.name == "Exit") {
+                $("#tt").tabs("close", item.title);
+            }
+            else if (item.name == "Others") {
+                var tabtitle;
+                $("#aa .mymenu").each(function (index, obj) {
+                    tabtitle=$("#aa .mymenu:eq(" + index + ")").text();
+                    if (tabtitle != item.title) {
+                        $("#tt").tabs("close", tabtitle);
+                    }
+                });
+            }
+            else {
+                $("#aa .mymenu").each(function (index, obj) {
+                    $("#tt").tabs("close", $("#aa .mymenu:eq(" + index + ")").text());
+                });
+            }
+        }
+
+        $(function () {
+            //系统菜单触发事件；
+            $("#aa .mymenu").click(function () {
+                if ($(this).text() == "错误申请") {
+                    addTab("成绩查询", $(this).attr("targeturl"));
+                }
+                else if ($(this).text() == "错误申请处理") {
+                    addTab("成绩管理", $(this).attr("targeturl"));
+                }
+                else {
+                    addTab($(this).text(), $(this).attr("targeturl"));
+                }
+            });
+            function addTab(subtitle, url) {
+                if (!$('#tt').tabs('exists', subtitle)) {
+                    $('#tt').tabs('add', {
+                        title: subtitle,
+                        //content: createFrame(url),
+                        href: url,
+                        closable: true
+                    });
+                } else {
+                    $('#tt').tabs('select', subtitle);
+                }
+            }
+            function closeTab(title) { $("#tt").tabs("close", title); }
+            function closeAll() {
+                $("#aa .mymenu").each(function (index, obj) {
+                    var tab = $(".tabs-closable", this).text();
+                    $("#tt").tabs("close", obj.text());
+                });
+            }
+
+            //选项卡右键菜单；
+            $('#tt').tabs({
+                onContextMenu: function (e, title) {
+                    e.preventDefault();
+                    $("#CurrorTab").attr("title", title);
+                    $('#mm').menu('show', {
+                        left: e.pageX,
+                        top: e.pageY
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>系院信息管理</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+</head>
+<body>
+    <table class="easyui-datagrid" id="datagridd" fit="true"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Department/GetAll',method:'get',toolbar:toolbar">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'DId',width:200,align:'center'">系院编号</th>
+                <th data-options="field:'Name',width:200">系院名称</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="Mwindw" class="easyui-window" title="新增" data-options="iconCls:'icon-save',closed:'true',resizable:false" style="width: 423px;height: 268px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_d.jpg);">
+                <input type="hidden" id="dDId" name="DId"  value=""/>
+                <table id="wintb" style="margin:0px auto;height:100%">
+                    <tr><td>系院名称：</td><td><input type="text" id="dName" name="Name" required/></td></tr>
+                </table>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="dbtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#Mwindw').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        var toolbar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function () {
+                $("#Mwindw").window("open");
+                $("#Mwindw").window("setTitle", "新增");
+                $("#dDId").val("0");
+                $("#dName").val("");
+            }
+        }, {
+            text: '修改',
+            iconCls: 'icon-edit',
+            handler: function () {
+                var row = $('#datagridd').datagrid('getSelected');
+                if (row) {
+                    $("#Mwindw").window("open");
+                    $("#Mwindw").window("setTitle", "修改[编号：" + row.DId + "]");
+                    $("#dDId").val(row.DId);
+                    $("#dName").val(row.Name);
+                }
+            }
+        }, '-', {
+            text: '删除',
+            iconCls: 'icon-cut',
+            handler: function () {
+                var row = $('#datagridd').datagrid('getSelected');
+                if (row) {
+                    $.messager.confirm("温馨提示", "确定删除吗？[系院编号：" + row.DId + "]\r\n与此相关的学生信息将全部删除！", function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/Department/Delete",
+                                type: "POST",
+                                data: { "DId": row.DId },
+                                dataType: "text",
+                                success: function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert("温馨提示", "删除成功！", "info");
+                                        $('#datagridd').datagrid('reload');
+                                    }
+                                    else {
+                                        $.messager.alert("温馨提示", "删除过程中出现异常，删除失败！", "error");
+                                    }
+                                },
+                            });
+                        }
+                    });
+                }
+            }
+        }];
+
+        $("#dbtnSave").click(function () {
+            if ($("#dName").val() == "") {
+                $.messager.alert("温馨提示", "所有项目必填！", "warning");
+                return;
+            }
+            if ($("#dDId").val() != "0" && $("#dDId").val() != "") {
+                $.ajax({
+                    url: "/Department/Update",
+                    type: "POST",
+                    data: {
+                        "DId": $("#dDId").val(), "Name": $("#dName").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "修改成功！", "info");
+                            $('#datagridd').datagrid('reload');
+                            $("#Mwindw").window("close");
+                        }
+                        else if (data == "EXIST") {
+                            $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！修改失败！", "error");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "修改过程中出现异常，可能已存在此项信息，修改失败！", "error");
+                        }
+                    },
+                });
+            }
+            else {
+                $.ajax({
+                    url: "/Department/Add",
+                    type: "POST",
+                    data: {
+                        "DId": $("#dDId").val(), "Name": $("#dName").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "新增成功！", "info");
+                            $('#datagridd').datagrid('reload');
+                            $("#Mwindw").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "可能已存在此项，新增失败！", "error");
+                        }
+                    },
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

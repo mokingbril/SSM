@@ -1,0 +1,161 @@
+﻿@using SSM.Models;
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>课程管理</title>
+    <link href="~/Content/themes/icon.css" rel="stylesheet" />
+    <link href="~/Content/themes/default/easyui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.7.1.js"></script>
+    <script src="~/Scripts/jquery.easyui.min.js"></script>
+</head>
+<body>
+    <table class="easyui-datagrid" id="datagridb" fit="true"
+        data-options="rowNumbers:true,pagination:true,pageSize:10,singleSelect:true,collapsible:true,url:'/Subject/GetAll',method:'get',toolbar:toolbar">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:'true'"></th>
+                <th data-options="field:'SubId',width:100,align:'center'">编号</th>
+                <th data-options="field:'Name',width:200">名称</th>
+                <th data-options="field:'Period',width:100">学时</th>
+                <th data-options="field:'Score',width:100,">学分</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="Mywindow" class="easyui-window" title="新增" data-options="iconCls:'icon-save',closed:'true',resizable:false"style="width: 423px;height: 268px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'center'" style="padding: 10px;background:url(../Content/Images/back_d.jpg);">
+                <input type="hidden" id="bSubId" name="SubId"  value=""/>
+                <table style="margin:0px auto;height:100%">
+                    <tr><td>名称：</td><td><input id="bName" name="Name" type="text" required value="" /></td></tr>
+                    <tr><td>学时：</td><td><input id="bPeriod" name="Period" type="number" required value="" /></td></tr>
+                    <tr><td>学分：</td><td><input type="text" required id="bScore" name="Score" /></td></tr>
+                </table>
+            </div>
+            <div data-options="region:'south',border:false" style="text-align:right;padding:5px 0 0;">
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" id="bbtnSave">确定</a>
+				<a class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="$('#Mywindow').window('close')">取消</a>
+			</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $.messager.defaults.ok = "确定";
+        $.messager.defaults.cancel = "取消";
+
+        var toolbar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function () {
+                $("#Mywindow").window("open");
+                $("#Mywindow").window("setTitle", "新增");
+                $("#bSubId").val("0");
+                $("#bName").val("");
+                $("#bPeriod").val("");
+                $("#bScore").val("");
+            }
+        }, {
+            text: '修改',
+            iconCls: 'icon-edit',
+            handler: function () {
+                var row = $('#datagridb').datagrid('getSelected');
+                if (row) {
+                    $("#Mywindow").window("open");
+                    $("#Mywindow").window("setTitle", "修改[编号：" + row.SubId + "]");
+                    $("#bSubId").val(row.SubId);
+                    $("#bName").val(row.Name);
+                    $("#bPeriod").val(row.Period);
+                    $("#bScore").val(row.Score);
+                }
+            }
+        }, '-', {
+            text: '删除',
+            iconCls: 'icon-cut',
+            handler: function () {
+                var row = $('#datagridb').datagrid('getSelected');
+                if (row) {
+                    $.messager.confirm("温馨提示", "确定删除吗？[编号：" + row.SubId + "]\r\n与此课程关联的成绩等数据将会删除！", function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/Subject/Delete",
+                                type: "POST",
+                                data: { "SubId": row.SubId },
+                                dataType: "text",
+                                success: function (data) {
+                                    if (data == "OK") {
+                                        $.messager.alert("温馨提示", "删除成功！", "info");
+                                        $('#datagridb').datagrid('reload');
+                                    }
+                                    else if (data == "EXIST") {
+                                        $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！删除失败！", "error");
+                                    }
+                                    else {
+                                        $.messager.alert("温馨提示", "删除过程中出现异常，删除失败！", "error");
+                                    }
+                                },
+                            });
+                        }
+                    });
+                }
+            }
+        }];
+
+        $("#bbtnSave").click(function () {
+            if ($("#bScore").val() == "" || $("#bName").val() == "" || $("#bPeriod").val() == "") {
+                $.messager.alert("温馨提示", "所有项目必填！", "warning");
+                return;
+            }
+            if ($("#bSubId").val() != "0" && $("#bSubId").val() != "") {
+                $.ajax({
+                    url: "/Subject/Update",
+                    type: "POST",
+                    data: {
+                        "SubId": $("#bSubId").val(), "Period": $("#bPeriod").val(), "Name": $("#bName").val(), "Score": $("#bScore").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "修改成功！", "info");
+                            $('#datagridb').datagrid('reload');
+                            $("#Mywindow").window("close");
+                        }
+                        else if (data == "EXIST") {
+                            $.messager.alert("温馨提示", "不存在此项404！可能已删除过此项,请刷新！修改失败！", "error");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "修改过程中出现异常，可能已存在此项信息，修改失败！", "error");
+                        }
+                    },
+                });
+            }
+            else {
+                $.ajax({
+                    url: "/Subject/Add",
+                    type: "POST",
+                    data: {
+                        "SubId": $("#bSubId").val(), "Period": $("#bPeriod").val(), "Name": $("#bName").val(), "Score": $("#bScore").val()
+                    },
+                    dataType: "text",
+                    success: function (data) {
+                        if (data == "OK") {
+                            $.messager.alert("温馨提示", "新增成功！", "info");
+                            $('#datagridb').datagrid('reload');
+                            $("#Mywindow").window("close");
+                        }
+                        else {
+                            $.messager.alert("温馨提示", "可能已存在此项，新增失败！", "error");
+                        }
+                    },
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>
+
