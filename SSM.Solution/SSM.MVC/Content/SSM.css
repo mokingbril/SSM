@@ -1,0 +1,81 @@
+﻿*{
+    margin:0px;
+    padding:0px;
+}
+a {
+    text-decoration:underline;
+    color:orange;
+}
+
+.error {
+    color:red;
+}
+.Main {
+    background:url(Images/back_1.jpg) no-repeat;
+}
+
+/*登录页面*/
+.login_b {
+    margin:100px auto;
+    width:580px;
+    height:300px;
+    font-size:14px;
+    text-align:center;
+
+    margin-top:100px;
+    border:1px solid white;
+    border-top:0px;
+}
+.login_btn {width:85px; height:22px; 
+            text-align:center; border:none; line-height:22px;}
+#tbLogin {
+    margin: 0px auto;height:180px;
+}
+#tbLogin input {
+        float: left;
+}
+
+/*注册页面*/
+#CheckCode {
+    width:80px;
+}
+.sred span{
+    color:red;
+    font-weight:bolder;
+    padding-left:10px;
+}
+.Register {
+    margin:100px auto;
+    margin-top:0px;
+    /*background:url(Images/Login.png) no-repeat;*/
+    text-align:center;
+    width:600px;
+    height:450px;
+    font-size:14px;
+
+    border:1px solid white;
+    border-top:0px;
+}
+.Register p {
+    margin-top:10px;
+}
+.btnRegister {
+    width:87px;
+    height:27px;
+    background:url(Images/BtnRegister.png) no-repeat;
+    margin:0px;
+    padding:0px;
+    border:0px;
+}
+.btnCancel {
+    width:87px;
+    height:27px;
+    margin:0px;
+    padding:0px;
+    border:0px;
+    background:url(Images/Cancel.png) no-repeat;
+}
+
+/*主页面*/
+.mymenu {margin: 10px;padding-top:10px;background-color: gray;font-weight: bold;height: 25px;text-align: center;}
+
